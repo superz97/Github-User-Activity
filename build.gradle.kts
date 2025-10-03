@@ -6,7 +6,7 @@ plugins {
 
 group = "com.github.superz97"
 version = "1.0"
-description = "Github Activity Tracker"
+description = "GitHub Activity Tracker"
 
 java {
     toolchain {

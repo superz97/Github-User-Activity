@@ -10,10 +10,10 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableCaching
 @EnableJpaRepositories
 @EnableScheduling
-public class GithubActivityTrackerApplication {
+public class GitHubActivityTrackerApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(GithubActivityTrackerApplication.class, args);
+        SpringApplication.run(GitHubActivityTrackerApplication.class, args);
     }
 
 }
