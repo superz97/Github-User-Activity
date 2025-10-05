@@ -7,15 +7,35 @@ spring:
     username: postgres
     password: postgres
     driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 20000
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     show-sql: false
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
+        jdbc:
+          lob:
+            non_contextual_creation: true
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: 0
+    locations: classpath:db/migration
+    schemas: public
+    table: flyway_schema_history
+    validate-migration-naming: true
+    out-of-order: false
+    placeholder-replacement: true
+    placeholders:
+      schema_name: public
 
   data:
     redis:
@@ -56,3 +76,7 @@ webclient:
     connection: 5000
     read: 10000
     write: 5000
+
+  config:
+    activate:
+      on-profile: dev

@@ -50,32 +50,48 @@ public class ActivityService {
     }
 
     // Mono<Void>
-    private Mono<Object> saveToDatabase(String username, List<GitHubEvent> events) {
+    private Mono<Void> saveToDatabase(String username, List<GitHubEvent> events) {
         return Mono.fromRunnable(() -> {
-            List<ActivityRecord> records = events.stream()
-                    .map(event -> {
-                        ActivityRecord record = new ActivityRecord();
-                        record.setEventId(event.getId());
-                        record.setUsername(username);
-                        record.setEventType(event.getType());
-                        record.setRepositoryName(event.getRepo().getName());
-                        record.setDescription(event.getFormattedActivity());
-                        record.setEventTime(event.getCreatedAt());
-                        record.setFetchedAt(LocalDateTime.now());
+                    try {
+                        List<ActivityRecord> records = events.stream()
+                                .map(event -> {
+                                    ActivityRecord record = new ActivityRecord();
+                                    record.setEventId(event.getId());
+                                    record.setUsername(username);
+                                    record.setEventType(event.getType());
+                                    record.setRepositoryName(event.getRepo().getName());
 
-                        try {
-                            record.setRawPayload(objectMapper.writeValueAsString(event.getPayload()));
-                        } catch (Exception e) {
-                            log.error("Error serializing payload for event: {}", event.getId(), e);
-                        }
+                                    try {
+                                        record.setDescription(event.getFormattedActivity());
+                                    } catch (Exception e) {
+                                        log.warn("Error formatting activity for event {}: {}", event.getId(), e.getMessage());
+                                        record.setDescription(event.getType() + " on " + event.getRepo().getName());
+                                    }
 
-                        return record;
-                    })
-                    .collect(Collectors.toList());
+                                    record.setEventTime(event.getCreatedAt());
+                                    record.setFetchedAt(LocalDateTime.now());
 
-            activityRepository.saveAll(records);
-            log.info("Saved {} activity records for user: {}", records.size(), username);
-        }).subscribeOn(Schedulers.boundedElastic());
+                                    try {
+                                        record.setRawPayload(objectMapper.writeValueAsString(event.getPayload()));
+                                    } catch (Exception e) {
+                                        log.error("Error serializing payload for event: {}", event.getId(), e);
+                                        record.setRawPayload("{}");
+                                    }
+
+                                    return record;
+                                })
+                                .collect(Collectors.toList());
+
+                        activityRepository.saveAll(records);
+                        log.info("Saved {} activity records for user: {}", records.size(), username);
+                    } catch (Exception e) {
+                        log.error("Error saving activities to database for user: {}", username, e);
+                    }
+                }).subscribeOn(Schedulers.boundedElastic())
+                .onErrorResume(throwable -> {
+                    log.error("Database save failed for user: {}", username, throwable);
+                    return Mono.empty();
+                }).then();
     }
 
     public Flux<GitHubEvent> getFilteredActivity(String username, String eventType) {

@@ -56,6 +56,7 @@ public class GitHubCommands {
         return result.toString();
     }
 
+    @ShellMethod(value = "Filter activity by event type", key = {"filter", "f"})
     public String filterActivity(
             @ShellOption(help = "GitHub username") String username,
             @ShellOption(help = "Event type (e.g., PushEvent, CreateEvent, IssuesEvent)") String eventType,
@@ -183,7 +184,7 @@ public class GitHubCommands {
         }
     }
 
-    @ShellMethod(value = "Show command help", key = {"help", "h"})
+    @ShellMethod(value = "Show command help", key = {"h"})
     public String showHelp() {
         return """
             
@@ -210,7 +211,7 @@ public class GitHubCommands {
               clear-cache <username>
                 Clear cached data for a user
                 
-              help
+              h
                 Show this help message
             
             💡 Event Types:
